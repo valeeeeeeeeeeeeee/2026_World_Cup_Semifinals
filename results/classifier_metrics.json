@@ -1,0 +1,14 @@
+{
+  "n_train": 42226,
+  "n_valid": 7279,
+  "naive_baseline_log_loss": 1.0495629265881479,
+  "logistic_regression": {
+    "log_loss": 0.8634166067559822,
+    "accuracy": 0.6068141228190685
+  },
+  "gradient_boosting": {
+    "log_loss": 0.8645143368750801,
+    "accuracy": 0.605028163209232
+  },
+  "chosen_model": "logistic_regression"
+}
