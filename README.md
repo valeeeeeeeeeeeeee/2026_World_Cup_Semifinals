@@ -27,12 +27,32 @@ Three components, combined into a final ensemble:
    ratings are the core team-strength signal fed into everything else.
 
 2. **Win/Draw/Loss classifier** (`src/features.py`, `src/train_model.py`)
-   — a logistic regression trained on `elo_diff`, `neutral`, and rolling
-   10-match form (points-per-game and goal-difference deltas), all
-   computed leak-free (pre-match state only). Evaluated on a time-based
-   holdout (train < 2019, validate ≥ 2019): **60.7% accuracy** / **0.863
-   log-loss**, vs. a 1.05 log-loss naive baseline that just guesses the
-   class priors.
+   — a **recency-weighted** multinomial logistic regression trained on an
+   expanded, leak-free feature set (pre-match state only): Elo gap **and**
+   level (`elo_sum`), neutral-venue flag, rolling 10-match form
+   (points-per-game, goals-scored/game, goals-conceded/game deltas), days
+   of rest, and competition importance. Training matches are weighted by an
+   exponential decay on age (6-year half-life) so current squad strength
+   dominates. Logistic regression is chosen deliberately: it extrapolates
+   linearly, which matters because the four semifinalists sit at the very
+   top of the Elo range, beyond where tree models can predict.
+
+   Evaluated on a time-based holdout (train < 2019, validate ≥ 2019):
+
+   | Domain | Accuracy | Log-loss |
+   |---|---|---|
+   | All matches | 60.7% | 0.861 |
+   | Competitive (real tournaments — the semifinal's domain) | **61.7%** | **0.847** |
+   | Naive baseline (class priors) | — | 1.050 |
+
+   On *all* international matches, accuracy is intrinsically capped near
+   60% because draws (~23% of games) are almost never the single most
+   likely outcome — even a perfect "always pick the Elo favorite" rule
+   scores 60.0%. The meaningful gains from recency weighting and the
+   expanded features therefore show up as better **probability quality**
+   (log-loss 0.866 → 0.861 overall, 0.851 → 0.847 on competitive matches)
+   and higher accuracy on the **competitive** domain a World Cup semifinal
+   actually belongs to.
 
 3. **Poisson goal model** (`src/poisson_model.py`) — Dixon-Coles-style
    attack/defense strengths per team, fit via L2-regularized Poisson
@@ -60,8 +80,8 @@ estimates.
 
 | Match | Elo | Poisson xG | Final advance probability | Prediction |
 |---|---|---|---|---|
-| France vs Spain | 2243 vs 2266 | 1.07 – 1.38 | **France 45.6% – Spain 54.4%** | **Spain** |
-| Argentina vs England | 2264 vs 2179 | 1.18 – 0.92 | **Argentina 61.3% – England 38.7%** | **Argentina** |
+| France vs Spain | 2243 vs 2266 | 1.07 – 1.38 | **France 43.1% – Spain 56.9%** | **Spain** |
+| Argentina vs England | 2264 vs 2179 | 1.18 – 0.92 | **Argentina 59.0% – England 41.0%** | **Argentina** |
 
 **Predicted final: Argentina vs Spain.**
 
