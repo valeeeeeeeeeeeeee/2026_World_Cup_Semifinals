@@ -54,6 +54,26 @@ Three components, combined into a final ensemble:
    and higher accuracy on the **competitive** domain a World Cup semifinal
    actually belongs to.
 
+   **Probability calibration.** The trainer also evaluates two post-hoc
+   calibrators against the raw model and deploys whichever minimises
+   holdout log-loss: **Platt scaling** (sigmoid) and **isotonic
+   regression**, each fit on a separate 2017–2018 temporal slice (leak-free:
+   the base model never saw it) and scored on the 2019+ holdout:
+
+   | Model | Competitive holdout log-loss |
+   |---|---|
+   | **Logistic (raw)** | **0.847** ← deployed |
+   | Logistic + Platt scaling | 0.863 |
+   | Logistic + isotonic regression | 0.918 |
+
+   Here calibration *does not* lower log-loss: a multinomial logistic
+   regression fit by maximum likelihood is already close to calibrated, so
+   re-mapping its probabilities only adds noise (isotonic further overfits
+   the calibration slice and is distorted by the one-vs-rest multiclass
+   renormalisation). The selection is automatic, so if the data ever drifts
+   to where calibration helps, it is adopted with no code change. Per-method
+   numbers are logged to `results/classifier_metrics.json`.
+
 3. **Poisson goal model** (`src/poisson_model.py`) — Dixon-Coles-style
    attack/defense strengths per team, fit via L2-regularized Poisson
    regression (`sklearn.PoissonRegressor`) on matches since 2015 (to
