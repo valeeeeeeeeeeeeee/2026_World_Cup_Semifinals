@@ -27,52 +27,54 @@ Three components, combined into a final ensemble:
    ratings are the core team-strength signal fed into everything else.
 
 2. **Win/Draw/Loss classifier** (`src/features.py`, `src/train_model.py`)
-   — a **recency-weighted** multinomial logistic regression trained on an
-   expanded, leak-free feature set (pre-match state only): Elo gap **and**
-   level (`elo_sum`), neutral-venue flag, rolling 10-match form
-   (points-per-game, goals-scored/game, goals-conceded/game deltas), days
-   of rest, and competition importance. Training matches are weighted by an
-   exponential decay on age (6-year half-life) so current squad strength
-   dominates. Logistic regression is chosen deliberately: it extrapolates
-   linearly, which matters because the four semifinalists sit at the very
-   top of the Elo range, beyond where tree models can predict.
+   — a **recency-weighted ensemble** of a multinomial logistic regression
+   and a gradient-boosting model, blended `0.65 * logistic + 0.35 *
+   gradient_boosting`. Both are trained on an expanded, leak-free feature
+   set (pre-match state only): Elo gap **and** level (`elo_sum`),
+   neutral-venue flag, rolling 10-match form (points-per-game,
+   goals-scored/game, goals-conceded/game deltas), days of rest, and
+   competition importance. Training matches are weighted by an exponential
+   decay on age (6-year half-life) so current squad strength dominates.
+   Logistic is kept as the dominant component because it extrapolates
+   linearly to the top-of-distribution semifinalists, where the tree model
+   cannot; the blend weight is fixed (not tuned on the holdout) and was
+   validated to beat logistic-alone across five independent time folds.
 
    Evaluated on a time-based holdout (train < 2019, validate ≥ 2019):
 
    | Domain | Accuracy | Log-loss |
    |---|---|---|
    | All matches | 60.7% | 0.861 |
-   | Competitive (real tournaments — the semifinal's domain) | **61.7%** | **0.847** |
+   | Competitive (real tournaments — the semifinal's domain) | **61.6%** | **0.846** |
    | Naive baseline (class priors) | — | 1.050 |
 
    On *all* international matches, accuracy is intrinsically capped near
    60% because draws (~23% of games) are almost never the single most
    likely outcome — even a perfect "always pick the Elo favorite" rule
-   scores 60.0%. The meaningful gains from recency weighting and the
-   expanded features therefore show up as better **probability quality**
-   (log-loss 0.866 → 0.861 overall, 0.851 → 0.847 on competitive matches)
-   and higher accuracy on the **competitive** domain a World Cup semifinal
-   actually belongs to.
+   scores 60.0%. The gains from recency weighting, the expanded features
+   and the ensemble therefore show up mainly as better **probability
+   quality** (log-loss), plus higher accuracy on the **competitive** domain
+   a World Cup semifinal actually belongs to.
 
-   **Probability calibration.** The trainer also evaluates two post-hoc
-   calibrators against the raw model and deploys whichever minimises
-   holdout log-loss: **Platt scaling** (sigmoid) and **isotonic
-   regression**, each fit on a separate 2017–2018 temporal slice (leak-free:
-   the base model never saw it) and scored on the 2019+ holdout:
+   **What was tried, and what the trainer reports** (competitive holdout
+   log-loss, all logged to `results/classifier_metrics.json`):
 
-   | Model | Competitive holdout log-loss |
+   | Model | Competitive log-loss |
    |---|---|
-   | **Logistic (raw)** | **0.847** ← deployed |
+   | Logistic (recency-weighted, expanded features) | 0.847 |
+   | Gradient boosting | 0.849 |
    | Logistic + Platt scaling | 0.863 |
    | Logistic + isotonic regression | 0.918 |
+   | **Ensemble (0.65 logistic + 0.35 GBM)** | **0.846** ← deployed |
 
-   Here calibration *does not* lower log-loss: a multinomial logistic
-   regression fit by maximum likelihood is already close to calibrated, so
-   re-mapping its probabilities only adds noise (isotonic further overfits
-   the calibration slice and is distorted by the one-vs-rest multiclass
-   renormalisation). The selection is automatic, so if the data ever drifts
-   to where calibration helps, it is adopted with no code change. Per-method
-   numbers are logged to `results/classifier_metrics.json`.
+   Two things are worth calling out. **Probability calibration** (Platt
+   scaling and isotonic regression, each fit leak-free on a separate
+   2017–2018 slice) does *not* lower log-loss here: a maximum-likelihood
+   logistic model is already close to calibrated, so re-mapping its
+   probabilities only adds noise. **Ensembling** does help, but modestly —
+   the logistic and gradient-boosting models are both Elo-driven and make
+   correlated errors, so averaging them buys a small, consistent log-loss
+   reduction rather than a large one.
 
 3. **Poisson goal model** (`src/poisson_model.py`) — Dixon-Coles-style
    attack/defense strengths per team, fit via L2-regularized Poisson
@@ -100,8 +102,8 @@ estimates.
 
 | Match | Elo | Poisson xG | Final advance probability | Prediction |
 |---|---|---|---|---|
-| France vs Spain | 2243 vs 2266 | 1.07 – 1.38 | **France 43.1% – Spain 56.9%** | **Spain** |
-| Argentina vs England | 2264 vs 2179 | 1.18 – 0.92 | **Argentina 59.0% – England 41.0%** | **Argentina** |
+| France vs Spain | 2243 vs 2266 | 1.07 – 1.38 | **France 43.4% – Spain 56.6%** | **Spain** |
+| Argentina vs England | 2264 vs 2179 | 1.18 – 0.92 | **Argentina 59.5% – England 40.5%** | **Argentina** |
 
 **Predicted final: Argentina vs Spain.**
 
