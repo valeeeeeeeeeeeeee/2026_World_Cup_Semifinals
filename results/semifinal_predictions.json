@@ -1,0 +1,62 @@
+{
+  "France vs Spain": {
+    "venue": "Arlington",
+    "date": "2026-07-14",
+    "elo": {
+      "France": 2243.0,
+      "Spain": 2265.9
+    },
+    "poisson_expected_goals": {
+      "France": 1.07,
+      "Spain": 1.38
+    },
+    "monte_carlo_advance_prob": {
+      "France": 0.417,
+      "Spain": 0.583
+    },
+    "classifier_90min_prob": {
+      "home_win": 0.3656,
+      "draw": 0.263,
+      "away_win": 0.3714
+    },
+    "classifier_advance_prob": {
+      "France": 0.4942,
+      "Spain": 0.5058
+    },
+    "final_advance_probability": {
+      "France": 0.4556,
+      "Spain": 0.5444
+    },
+    "predicted_finalist": "Spain"
+  },
+  "Argentina vs England": {
+    "venue": "Atlanta",
+    "date": "2026-07-15",
+    "elo": {
+      "Argentina": 2263.8,
+      "England": 2178.9
+    },
+    "poisson_expected_goals": {
+      "Argentina": 1.18,
+      "England": 0.92
+    },
+    "monte_carlo_advance_prob": {
+      "Argentina": 0.5845,
+      "England": 0.4155
+    },
+    "classifier_90min_prob": {
+      "home_win": 0.5067,
+      "draw": 0.248,
+      "away_win": 0.2453
+    },
+    "classifier_advance_prob": {
+      "Argentina": 0.6408,
+      "England": 0.3592
+    },
+    "final_advance_probability": {
+      "Argentina": 0.6126,
+      "England": 0.3874
+    },
+    "predicted_finalist": "Argentina"
+  }
+}
