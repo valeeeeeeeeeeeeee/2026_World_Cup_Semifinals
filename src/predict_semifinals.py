@@ -116,7 +116,7 @@ def main():
     report = {}
     for fx in FIXTURES:
         home, away = fx["home"], fx["away"]
-        feats = fixture_features(elo, form, home, away, neutral=True)
+        feats = fixture_features(elo, form, home, away, neutral=True, match_date=fx["date"])
         elo_diff_raw = feats["home_elo"] - feats["away_elo"]
 
         mc = simulate_match(goal_model, home, away, elo_diff_raw)
