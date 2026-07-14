@@ -15,17 +15,17 @@
       "Spain": 0.583
     },
     "classifier_90min_prob": {
-      "home_win": 0.2933,
-      "draw": 0.3117,
-      "away_win": 0.395
+      "home_win": 0.2985,
+      "draw": 0.3113,
+      "away_win": 0.3902
     },
     "classifier_advance_prob": {
-      "France": 0.4457,
-      "Spain": 0.5543
+      "France": 0.4507,
+      "Spain": 0.5493
     },
     "final_advance_probability": {
-      "France": 0.4313,
-      "Spain": 0.5687
+      "France": 0.4338,
+      "Spain": 0.5662
     },
     "predicted_finalist": "Spain"
   },
@@ -45,17 +45,17 @@
       "England": 0.4155
     },
     "classifier_90min_prob": {
-      "home_win": 0.4303,
-      "draw": 0.305,
-      "away_win": 0.2647
+      "home_win": 0.4436,
+      "draw": 0.2997,
+      "away_win": 0.2567
     },
     "classifier_advance_prob": {
-      "Argentina": 0.5952,
-      "England": 0.4048
+      "Argentina": 0.6056,
+      "England": 0.3944
     },
     "final_advance_probability": {
-      "Argentina": 0.5898,
-      "England": 0.4102
+      "Argentina": 0.595,
+      "England": 0.405
     },
     "predicted_finalist": "Argentina"
   }

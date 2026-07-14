@@ -89,14 +89,22 @@ def simulate_match(goal_model: PoissonGoalModel, home: str, away: str, elo_diff_
     }
 
 
-def classifier_advance_prob(clf_bundle, feats: dict, elo_diff_raw: float):
-    model = clf_bundle["model"]
-    scaler = clf_bundle["scaler"]
+def ensemble_class_probs(clf_bundle, feats: dict) -> dict:
+    """Weighted blend of each member's predict_proba, aligned to class labels."""
+    classes = clf_bundle["classes"]
     X = pd.DataFrame([{k: feats[k] for k in clf_bundle["features"]}])
-    if scaler is not None:
-        X = scaler.transform(X)
-    probs = model.predict_proba(X)[0]
-    class_probs = dict(zip(model.classes_, probs))
+    blended = np.zeros(len(classes))
+    for member in clf_bundle["members"]:
+        model = member["model"]
+        probs = model.predict_proba(X)[0]
+        aligned = np.array([probs[list(model.classes_).index(c)] for c in classes])
+        blended += member["weight"] * aligned
+    blended /= blended.sum()
+    return dict(zip(classes, blended))
+
+
+def classifier_advance_prob(clf_bundle, feats: dict, elo_diff_raw: float):
+    class_probs = ensemble_class_probs(clf_bundle, feats)
     p_home, p_draw, p_away = class_probs.get("H", 0.0), class_probs.get("D", 0.0), class_probs.get("A", 0.0)
 
     p_home_shootout = shootout_win_prob(elo_diff_raw)
